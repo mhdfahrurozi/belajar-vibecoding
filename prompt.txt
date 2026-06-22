@@ -2,36 +2,30 @@ buatkan issue.md yang berisi perencanaan untuk nanti di imolementasikan oleh jun
 
 isi dari planninyna adalah sebagai berikut:
 
-buat tabel users;
+buat tabel sessions;
 id integer auto increment
-name varchar 255 not null
-email varchar 255 not null
-password varchar 255 not null (password merupakan hasil dari bcrypt)
+token varchar 255 not null (isinya UUID untuk token user yang login)
+user_id integer (FK ke tabel users)
 created_at timestamp default current_timestamp
-updated_at timestamp default current_timestamp
 
-buatkan API untuk registrasi user baru
 
-Endpoint : POST /api/users
+buatkan API untuk login User
+
+Endpoint : POST /api/users/login
+
 Request Body :
 {
-    "name" : "Eko",
     "email" : "eko@gmail.com",
     "password" : "rahasian"   
 }
-Response Body :
+response Body (Success) :
 {
-    "message": "User berhasil dibuat",
-    "data": {
-        "id": 1,
-        "name": "Eko",
-        "email": "eko@gmail.com"
-    }
+    "data" : "User berhasil login"
 }
 
 response Body (Error) :
 {
-    "error" : "Email sudah terdaftar"
+    "error" : "Password salah"
 }
 
 Struktur Folder di dalam src

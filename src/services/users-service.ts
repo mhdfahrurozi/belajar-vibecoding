@@ -1,5 +1,5 @@
 import { getDb } from "../db";
-import { users } from "../db/schema";
+import { users, sessions } from "../db/schema";
 import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 
@@ -31,4 +31,34 @@ export const registerUser = async (name: string, email: string, passwordPlain: s
   }).from(users).where(eq(users.email, email));
 
   return newUser;
+};
+
+export const loginUser = async (email: string, passwordPlain: string) => {
+  const db = await getDb();
+
+  // 1. Cari user berdasarkan email
+  const existingUsers = await db.select().from(users).where(eq(users.email, email));
+  if (existingUsers.length === 0) {
+    throw new Error("Email atau password salah");
+  }
+
+  const user = existingUsers[0];
+
+  // 2. Verifikasi password
+  const isValidPassword = await bcrypt.compare(passwordPlain, user.password);
+  if (!isValidPassword) {
+    throw new Error("Password salah");
+  }
+
+  // 3. Generate Token UUID
+  const token = crypto.randomUUID();
+
+  // 4. Simpan session ke database
+  await db.insert(sessions).values({
+    token,
+    userId: user.id,
+  });
+
+  // 5. Kembalikan token
+  return token;
 };
