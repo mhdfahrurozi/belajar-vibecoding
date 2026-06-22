@@ -42,7 +42,7 @@ export const loginUser = async (email: string, passwordPlain: string) => {
     throw new Error("Email atau password salah");
   }
 
-  const user = existingUsers[0];
+  const user = existingUsers[0]!;
 
   // 2. Verifikasi password
   const isValidPassword = await bcrypt.compare(passwordPlain, user.password);
