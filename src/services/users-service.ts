@@ -42,7 +42,7 @@ export const loginUser = async (email: string, passwordPlain: string) => {
     throw new Error("Email atau password salah");
   }
 
-  const user = existingUsers[0];
+  const user = existingUsers[0]!;
 
   // 2. Verifikasi password
   const isValidPassword = await bcrypt.compare(passwordPlain, user.password);
@@ -61,4 +61,24 @@ export const loginUser = async (email: string, passwordPlain: string) => {
 
   // 5. Kembalikan token
   return token;
+};
+
+export const getCurrentUser = async (token: string) => {
+  const db = await getDb();
+
+  const result = await db.select({
+    id: users.id,
+    name: users.name,
+    email: users.email,
+    createdAt: users.createdAt,
+  })
+  .from(sessions)
+  .innerJoin(users, eq(sessions.userId, users.id))
+  .where(eq(sessions.token, token));
+
+  if (result.length === 0) {
+    throw new Error("unauthorized");
+  }
+
+  return result[0];
 };
