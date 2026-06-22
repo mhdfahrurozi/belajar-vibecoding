@@ -16,5 +16,5 @@ export async function getDb() {
 
     _db = drizzle(poolConnection, { schema, mode: "default" });
   }
-  return _db;
+  return _db!;
 }
