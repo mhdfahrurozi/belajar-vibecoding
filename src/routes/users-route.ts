@@ -1,5 +1,5 @@
 import { Elysia } from "elysia";
-import { registerUser, loginUser, getCurrentUser } from "../services/users-service";
+import { registerUser, loginUser, getCurrentUser, logoutUser } from "../services/users-service";
 
 export const usersRoute = new Elysia({ prefix: "/api" })
   .post("/users", async ({ body, set }) => {
@@ -65,6 +65,26 @@ export const usersRoute = new Elysia({ prefix: "/api" })
       set.status = 401;
       return {
         error: error.message === "unauthorized" ? "unauthorized" : "Terjadi kesalahan internal"
+      };
+    }
+  })
+  .post("/users/logout", async ({ headers, set }) => {
+    try {
+      const authorization = headers.authorization;
+      if (!authorization || !authorization.startsWith("Bearer ")) {
+        throw new Error("unauthorized");
+      }
+
+      const token = authorization.substring(7);
+      await logoutUser(token);
+
+      return {
+        data: "OK"
+      };
+    } catch (error: any) {
+      set.status = 401;
+      return {
+        error: "Unauthorized"
       };
     }
   });

@@ -82,3 +82,18 @@ export const getCurrentUser = async (token: string) => {
 
   return result[0];
 };
+
+export const logoutUser = async (token: string) => {
+  const db = await getDb();
+
+  // 1. Cek apakah session ada
+  const existingSessions = await db.select().from(sessions).where(eq(sessions.token, token));
+  if (existingSessions.length === 0) {
+    throw new Error("unauthorized");
+  }
+
+  // 2. Hapus session
+  await db.delete(sessions).where(eq(sessions.token, token));
+
+  return "OK";
+};
