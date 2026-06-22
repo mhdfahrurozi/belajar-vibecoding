@@ -1,5 +1,5 @@
 import { Elysia } from "elysia";
-import { registerUser, loginUser, getCurrentUser } from "../services/users-service";
+import { registerUser, loginUser, getCurrentUser, logoutUser } from "../services/users-service";
 
 export const usersRoute = new Elysia({ prefix: "/api" })
   .post("/users", async ({ body, set }) => {
@@ -48,23 +48,54 @@ export const usersRoute = new Elysia({ prefix: "/api" })
       };
     }
   })
-  .get("/users/current", async ({ headers, set }) => {
+  .derive(({ headers }) => {
+    return {
+      get bearerToken() {
+        const authorization = headers.authorization;
+        if (!authorization || !authorization.startsWith("Bearer ")) {
+          return null;
+        }
+        return authorization.substring(7);
+      }
+    };
+  })
+  .get("/users/current", async ({ bearerToken, set }) => {
     try {
-      const authorization = headers.authorization;
-      if (!authorization || !authorization.startsWith("Bearer ")) {
+      if (!bearerToken) {
         throw new Error("unauthorized");
       }
 
-      const token = authorization.substring(7);
-      const user = await getCurrentUser(token);
+      const user = await getCurrentUser(bearerToken);
 
       return {
         data: user
       };
     } catch (error: any) {
-      set.status = 401;
+      if (error.message === "unauthorized") {
+        set.status = 401;
+        return { error: "Unauthorized" };
+      }
+      set.status = 500;
+      return { error: "Terjadi kesalahan internal" };
+    }
+  })
+  .post("/users/logout", async ({ bearerToken, set }) => {
+    try {
+      if (!bearerToken) {
+        throw new Error("unauthorized");
+      }
+
+      await logoutUser(bearerToken);
+
       return {
-        error: error.message === "unauthorized" ? "unauthorized" : "Terjadi kesalahan internal"
+        data: "OK"
       };
+    } catch (error: any) {
+      if (error.message === "unauthorized") {
+        set.status = 401;
+        return { error: "Unauthorized" };
+      }
+      set.status = 500;
+      return { error: "Terjadi kesalahan internal" };
     }
   });
